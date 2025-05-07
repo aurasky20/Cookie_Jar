@@ -28,8 +28,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  assets:
-    - assets/
+  # assets:
+    # - assets/
   #   - images/a_dot_ham.jpeg
 
   # fonts:
