@@ -9,7 +9,7 @@ environment:
   sdk: ^3.7.2
 
 dependencies:
-  supabase_flutter: ^1.10.25
+  supabase_flutter: ^2.9.0
   flutter:
     sdk: flutter
 
