@@ -18,7 +18,7 @@ class Homepage extends StatelessWidget {
                     crossAxisCount: 3,
                     mainAxisSpacing: 40,
                     crossAxisSpacing: 40,
-                    childAspectRatio: 4 / 3.5,
+                    // childAspectRatio: 4 / 5,
                   ),
                   itemBuilder: (context, index) {
                     return Column(
@@ -50,9 +50,8 @@ class Homepage extends StatelessWidget {
               ),
               width: 500,
 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-
+              child: ListView(
+                // crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Tambah menu',
