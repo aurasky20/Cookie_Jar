@@ -1,4 +1,4 @@
-import 'package:cookie_jar/database/simpan.dart';
+import 'package:cookie_jar/database/get_data.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -39,7 +39,13 @@ class _AuthState extends State<Auth> {
               onPressed: () {
                 Data();
               },
-              child: const Text('Sumbit'),
+              child: const Text('Login'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Data();
+              },
+              child: const Text('Sign Up'),
             ),
           ],
         ),
