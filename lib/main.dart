@@ -1,5 +1,6 @@
 import 'package:cookie_jar/database/auth.dart';
 import 'package:cookie_jar/database/get_data.dart';
+import 'package:cookie_jar/screens/homescreen.dart';
 // import 'package:cookie_jar/database/simpan.dart';
 // import 'package:cookie_jar/view/homepage.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: Data(),
+      home: Homepage(),
     );
   }
 }
