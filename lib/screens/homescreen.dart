@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 
-class Homepage extends StatelessWidget {
+class Homepage extends StatefulWidget {
   const Homepage({super.key});
 
   @override
+  State<Homepage> createState() => _HomepageState();
+}
+
+class _HomepageState extends State<Homepage> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
         child: Row(
@@ -14,7 +20,7 @@ class Homepage extends StatelessWidget {
             Expanded(
               child: Expanded(
                 child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     mainAxisSpacing: 40,
                     crossAxisSpacing: 40,
@@ -45,7 +51,7 @@ class Homepage extends StatelessWidget {
               margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               decoration: BoxDecoration(
-                color: Colors.grey.withAlpha(130),
+                color: Color(0xffF3F3F3),
                 borderRadius: BorderRadius.circular(20),
               ),
               width: 500,
@@ -58,12 +64,31 @@ class Homepage extends StatelessWidget {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                   SizedBox(height: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      borderRadius: BorderRadius.circular(20),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        //fungsi media picker disini
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          border: Border.all(width: 2, color: Colors.grey),
+
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        height: 260,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.photo_library),
+                              Text('Upload photo'),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    height: 260,
                   ),
                   SizedBox(height: 20),
                   Text('Nama Menu'),
@@ -130,14 +155,24 @@ class Homepage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 20),
-                  Container(
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.orange,
-                      borderRadius: BorderRadius.circular(15),
+                  GestureDetector(
+                    onTap: () {
+                      // fungsi submit ke database di sini
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Submit',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
                     ),
-                    child: Center(child: Text('Submit')),
                   ),
                 ],
               ),
