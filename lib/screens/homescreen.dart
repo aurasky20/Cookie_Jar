@@ -1,3 +1,5 @@
+import 'package:cookie_jar/widgets/create_product.dart';
+import 'package:cookie_jar/widgets/detail_produck.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,6 +14,8 @@ class Homepage extends StatefulWidget {
 class _HomepageState extends State<Homepage> {
   final supabase = Supabase.instance.client;
   List data = [];
+  Map? selectedProduct;
+  bool showDetail = false;
 
   final formatRupiah = NumberFormat.currency(
     locale: 'id_ID',
@@ -32,155 +36,180 @@ class _HomepageState extends State<Homepage> {
     });
   }
 
+  String role = 'Pembeli';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Daftar Kue Kering'),
+        backgroundColor: Colors.amber,
+        actions: [
+          if (role == 'Admin')
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const SubmitForm(),
+                );
+              },
+            ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-        child: Row(
-          children: [
-            Expanded(
-              child: GridView.builder(
-                itemCount: data.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 40,
-                  crossAxisSpacing: 40,
-                  // childAspectRatio: 4 / 4,
-                ),
-                itemBuilder: (context, index) {
-                  final e = data[index]; // ✅ definisikan variabel e
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Container(
-                      //   height: 250,
-                      //   decoration: BoxDecoration(
-                      //     color: Colors.grey,
-                      //     borderRadius: BorderRadius.circular(20),
-                      //   ),
-                      // ),
-                      Container(
-                        height: 250,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          image: DecorationImage(
-                            image: NetworkImage(
-                              e['link_foto'] ?? '', // Gunakan URL dari Supabase
-                            ), // Gunakan URL dari Supabase
-                            fit:BoxFit.cover, // Atur agar gambar mengisi seluruh container
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(e['nama_produk'] ?? 'Tanpa Nama'),
-                      const SizedBox(height: 20),
-                      Text(formatRupiah.format(e['harga'] ?? 0)),
-                    ],
-                  );
-                },
-              ),
-            ),
-
-            // Panel Form Tambah
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              decoration: BoxDecoration(
-                color: Colors.grey.withAlpha(130),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              width: 500,
-
-              child: Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Jika layar lebar (misalnya desktop), gunakan Row
+            if (constraints.maxWidth > 1000) {
+              return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Tambah menu',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    height: 260,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('Nama Kue Kering'),
-                  const SizedBox(height: 10),
-                  const TextField(
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text('Stok'),
-                            SizedBox(height: 10),
-                            TextField(
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ],
-                        ),
+                  Expanded(child: _buildGridView()),
+                  if (role != 'Admin' && selectedProduct != null)
+                    SizedBox(
+                      width: 500,
+                      child: DetailPanel(
+                        product: selectedProduct!,
+                        onClose: () {
+                          setState(() {
+                            selectedProduct = null;
+                          });
+                        },
                       ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text('Harga'),
-                            SizedBox(height: 10),
-                            TextField(
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('Deskripsi'),
-                  const SizedBox(height: 10),
-                  const TextField(
-                    maxLines: 7,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.orange,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Center(child: Text('Submit')),
-                  ),
                 ],
-              ),
-            ),
-          ],
+              );
+            } else {
+              // Jika layar sempit (misalnya mobile/tablet), tampilkan GridView + Detail di bawahnya
+              return Stack(
+                children: [
+                  SingleChildScrollView(child: _buildGridView()),
+                  if (role != 'Admin' && selectedProduct != null)
+                    Positioned.fill(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedProduct = null;
+                          });
+                        },
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Container(
+                                color: Colors.black.withOpacity(0.4),
+                              ),
+                            ),
+                            Center(
+                              child: GestureDetector(
+                                onTap:
+                                    () {}, // mencegah menutup saat klik isi detail
+                                child: Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.8,
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 300),
+                                    opacity: showDetail ? 1.0 : 0.0,
+                                    child: AnimatedScale(
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      scale: showDetail ? 1.0 : 0.9,
+                                      child: DetailPanel(
+                                        product: selectedProduct!,
+                                        onClose: () async {
+                                          setState(() {
+                                            showDetail = false;
+                                          });
+                                          await Future.delayed(
+                                            const Duration(milliseconds: 300),
+                                          );
+                                          setState(() {
+                                            selectedProduct = null;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            }
+          },
         ),
+      ),
+    );
+  }
+
+  Widget _buildGridView() {
+    return SingleChildScrollView(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = constraints.maxWidth;
+          int itemsPerRow =
+              (screenWidth / 280).floor(); // bisa diubah sesuai kebutuhan
+          itemsPerRow = itemsPerRow < 1 ? 1 : itemsPerRow;
+
+          double spacing = 20;
+          double itemWidth =
+              (screenWidth - ((itemsPerRow + 1) * spacing)) / itemsPerRow;
+
+          return Padding(
+            padding: EdgeInsets.all(spacing),
+            child: Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children:
+                  data.map((e) {
+                    return GestureDetector(
+                      onTap: () {
+                        if (role != 'Admin') {
+                          setState(() {
+                            selectedProduct = e;
+                            showDetail = true;
+                          });
+                        }
+                      },
+                      child: SizedBox(
+                        width: itemWidth,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              height: 250,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                image: DecorationImage(
+                                  image: NetworkImage(e['link_foto'] ?? ''),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(e['nama_produk'] ?? 'Tanpa Nama'),
+                            const SizedBox(height: 10),
+                            Text(formatRupiah.format(e['harga'] ?? 0)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+            ),
+          );
+        },
       ),
     );
   }
