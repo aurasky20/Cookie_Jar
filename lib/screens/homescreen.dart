@@ -5,17 +5,21 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Homepage extends StatefulWidget {
-  const Homepage({super.key});
+  final String role;
+
+  const Homepage({super.key, this.role = 'Pembeli'});
 
   @override
   State<Homepage> createState() => _HomepageState();
 }
+
 
 class _HomepageState extends State<Homepage> {
   final supabase = Supabase.instance.client;
   List data = [];
   Map? selectedProduct;
   bool showDetail = false;
+  String role = 'Pembeli';
 
   final formatRupiah = NumberFormat.currency(
     locale: 'id_ID',
@@ -26,6 +30,7 @@ class _HomepageState extends State<Homepage> {
   @override
   void initState() {
     super.initState();
+    role = widget.role;
     getData();
   }
 
@@ -36,15 +41,13 @@ class _HomepageState extends State<Homepage> {
     });
   }
 
-  String role = 'Pembeli';
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Daftar Kue Kering'),
-        backgroundColor: Colors.amber,
+        backgroundColor: Colors.red,
         actions: [
           if (role == 'Admin')
             IconButton(

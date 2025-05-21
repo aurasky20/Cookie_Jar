@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:cookie_jar/screens/homescreen.dart';
 import 'package:cookie_jar/login/regis.dart';
 
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +112,8 @@ class LoginPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           TextField(
+                            controller: emailController,
+
                             decoration: InputDecoration(
                               hintText: 'Masukkan Email',
                               border: OutlineInputBorder(
@@ -125,6 +135,7 @@ class LoginPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           TextField(
+                            controller: passwordController,
                             obscureText: true,
                             decoration: InputDecoration(
                               hintText: 'Masukkan Kata Sandi',
@@ -151,10 +162,30 @@ class LoginPage extends StatelessWidget {
                                 ),
                               ),
                               onPressed: () {
-                                Navigator.push(context,
-                                MaterialPageRoute(
-                                  builder: (context) => const Homepage()),
-                                );
+                                final email = emailController.text.trim();
+                                final password = passwordController.text;
+
+                                if (email == 'admin@admin.com' &&
+                                    password == 'admin123') {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) =>
+                                              const Homepage(role: 'Admin',), // bisa ganti Homepage(role: 'Admin')
+                                    ),
+                                  );
+                                } else {
+                                  // Login pembeli atau gagal (bisa tambahkan validasi login pembeli juga)
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) =>
+                                              const Homepage(), // ganti juga kalau pakai role
+                                    ),
+                                  );
+                                }
                               },
                               child: const Text(
                                 'Login',
