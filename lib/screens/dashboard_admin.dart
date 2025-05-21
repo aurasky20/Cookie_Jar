@@ -14,10 +14,27 @@ class _DashboardAdminState extends State<DashboardAdmin> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+        backgroundColor: Colors.amber,
+        /* actions: [
+          if (role == 'Admin')
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const SubmitForm(),
+                );
+              },
+            ),
+        ], */
+      ),
       body: Container(
         padding: EdgeInsets.all(24),
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
         child: Column(
+          crossAxisAlignment:CrossAxisAlignment.start ,
           children: [
             Row(
               children: [
@@ -66,13 +83,22 @@ class _DashboardAdminState extends State<DashboardAdmin> {
               ],
             ),
             const SizedBox(height: 20),
-            Row(
-              spacing: 20,
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
               children: [
-                cardDataInsight(title: 'Jumlah Produk', amount: 100),
-                cardDataInsight(title: 'Jumlah Pengguna', amount: 100),
+                SizedBox(
+                  width: 300,
+                  child: cardDataInsight(title: 'Jumlah Produk', amount: 10),
+                ),
+                SizedBox(
+                  width: 300,
+                  child: cardDataInsight(title: 'Jumlah Pengguna', amount: 20),
+                ),
+                // dst.
               ],
             ),
+            
           ],
         ),
       ),
