@@ -16,6 +16,7 @@ dependencies:
     sdk: flutter
   google_fonts: ^6.1.0
   cupertino_icons: ^1.0.8
+  flutter_svg: ^2.0.9
 
 dev_dependencies:
   flutter_test:
@@ -27,4 +28,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/background.jpg
+    - assets/images/cookie.svg
+    - assets/images/cookie.png
     - assets/font/Lobster/Lobster-Regular.ttf

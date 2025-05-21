@@ -46,6 +46,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        // <<<<<<< HEAD
         title: const Text('Daftar Kue Kering'),
         backgroundColor: Colors.red,
         actions: [
@@ -65,149 +66,176 @@ class _DashboardAdminState extends State<DashboardAdmin> {
         ],
       ),
       body: LayoutBuilder(
-  builder: (context, constraints) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 50,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Cari di sini...',
-                      hintStyle: GoogleFonts.dmSans(
-                        color: Colors.black,
-                        fontSize: 16,
-                      ),
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.search),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 10),
-              if (role == 'Admin')
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => const SubmitForm(),
-                    );
-                  },
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text(
-                    'Tambah Produk',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          SingleChildScrollView(
+        builder: (context, constraints) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Column(
               children: [
                 Row(
                   children: [
                     Expanded(
-                      child: cardDataInsight(
-                        title: 'Jumlah Produk',
-                        amount: data.length,
+                      child: SizedBox(
+                        height: 50,
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Cari di sini...',
+                            hintStyle: GoogleFonts.dmSans(
+                              color: Colors.black,
+                              fontSize: 16,
+                            ),
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.search),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: cardDataInsight(
-                        title: 'Jumlah Pengguna',
-                        amount: 100, // Ganti jika bisa dinamis
+                    SizedBox(width: 10),
+                    if (role == 'Admin')
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => const SubmitForm(),
+                          );
+                        },
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        label: const Text(
+                          'Tambah Produk',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
-                    ),
                   ],
                 ),
-                // const SizedBox(height: 20),
-                SizedBox(
-                  height: constraints.maxHeight * 0.6,
-                  child: _buildGridView(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  },
-),
-
-    );
-  }
-
-  Widget _buildGridView() {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final screenWidth = constraints.maxWidth;
-      int itemsPerRow = (screenWidth / 250).floor();
-      itemsPerRow = itemsPerRow < 1 ? 1 : itemsPerRow;
-
-      double spacing = 20;
-      double itemWidth = (screenWidth - ((itemsPerRow + 1) * spacing)) / itemsPerRow;
-
-      return GridView.builder(
-        padding: EdgeInsets.all(spacing),
-        itemCount: data.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: itemsPerRow,
-          crossAxisSpacing: spacing,
-          mainAxisSpacing: spacing,
-          childAspectRatio: 0.7,
-        ),
-        itemBuilder: (context, index) {
-          final e = data[index];
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedProduct = e;
-                showDetail = true;
-              });
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    image: DecorationImage(
-                      image: (e['link_foto'] != null &&
-                              e['link_foto'].toString().startsWith('http'))
-                          ? NetworkImage(e['link_foto'])
-                          : const AssetImage('assets/no_image.png')
-                              as ImageProvider,
-                      fit: BoxFit.cover,
-                    ),
+                const SizedBox(height: 20),
+                SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: cardDataInsight(
+                              title: 'Jumlah Produk',
+                              amount: data.length,
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: cardDataInsight(
+                              title: 'Jumlah Pengguna',
+                              amount: 100, // Ganti jika bisa dinamis
+                            ),
+                          ),
+                        ],
+                      ),
+                      // const SizedBox(height: 20),
+                      SizedBox(
+                        height: constraints.maxHeight * 0.6,
+                        child: _buildGridView(),
+                      ),
+                      const SizedBox(height: 20),
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: [
+                          SizedBox(
+                            width: 300,
+                            child: cardDataInsight(
+                              title: 'Jumlah Produk',
+                              amount: 10,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 300,
+                            child: cardDataInsight(
+                              title: 'Jumlah Pengguna',
+                              amount: 20,
+                            ),
+                          ),
+                          // dst.
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 10),
-                Text(e['nama_produk'] ?? 'Tanpa Nama'),
-                const SizedBox(height: 5),
-                Text(formatRupiah.format(e['harga'] ?? 0)),
               ],
             ),
           );
         },
-      );
-    },
-  );
-}
+      ),
+    );
+  }
 
+  Widget _buildGridView() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        int itemsPerRow = (screenWidth / 250).floor();
+        itemsPerRow = itemsPerRow < 1 ? 1 : itemsPerRow;
+
+        double spacing = 20;
+        double itemWidth =
+            (screenWidth - ((itemsPerRow + 1) * spacing)) / itemsPerRow;
+
+        return GridView.builder(
+          padding: EdgeInsets.all(spacing),
+          itemCount: data.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: itemsPerRow,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+            childAspectRatio: 0.7,
+          ),
+          itemBuilder: (context, index) {
+            final e = data[index];
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedProduct = e;
+                  showDetail = true;
+                });
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      image: DecorationImage(
+                        image:
+                            (e['link_foto'] != null &&
+                                    e['link_foto'].toString().startsWith(
+                                      'http',
+                                    ))
+                                ? NetworkImage(e['link_foto'])
+                                : const AssetImage('assets/no_image.png')
+                                    as ImageProvider,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(e['nama_produk'] ?? 'Tanpa Nama'),
+                  const SizedBox(height: 5),
+                  Text(formatRupiah.format(e['harga'] ?? 0)),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }
