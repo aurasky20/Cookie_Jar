@@ -3,12 +3,14 @@ import 'package:intl/intl.dart';
 
 class DetailPanel extends StatelessWidget {
   final Map product;
-final VoidCallback onClose;
+  final VoidCallback onClose;
+  double height;
 
   DetailPanel({
-  required this.product,
-  required this.onClose,
-});
+    required this.product,
+    required this.onClose,
+    required this.height,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +27,9 @@ final VoidCallback onClose;
         color: const Color(0xffF3F3F3),
         borderRadius: BorderRadius.circular(20),
       ),
+      constraints: BoxConstraints(maxHeight: height),
       width: 500,
+      height: height,
       child: ListView(
         children: [
           Row(
@@ -37,10 +41,7 @@ final VoidCallback onClose;
                 'Detail menu',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: onClose,
-              ),
+              IconButton(icon: const Icon(Icons.close), onPressed: onClose),
             ],
           ),
 

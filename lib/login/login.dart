@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cookie_jar/screens/homescreen.dart';
 import 'package:cookie_jar/login/regis.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({super.key});
@@ -14,6 +15,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  var obscure = true;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +32,7 @@ class _LoginPageState extends State<LoginPage> {
               colorBlendMode: BlendMode.darken,
             ),
           ),
+
           Center(
             child: Container(
               height: 550,
@@ -119,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                             decoration: InputDecoration(
                               hintText: 'Masukkan Email',
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(15),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -136,21 +140,43 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          TextField(
-                            controller: passwordController,
-                            obscureText: true,
-                            decoration: InputDecoration(
-                              hintText: 'Masukkan Kata Sandi',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 14,
-                              ),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(color: Colors.grey),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: passwordController,
+                                    obscureText: obscure,
+                                    style: TextStyle(),
+                                    decoration: InputDecoration(
+                                      hintText: 'Masukkan Kata Sandi',
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      obscure = !obscure;
+                                    });
+                                  },
+                                  icon:
+                                      obscure
+                                          ? Icon(Icons.visibility)
+                                          : Icon(Icons.visibility_off),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 120),
+                          Expanded(child: const SizedBox()),
                           SizedBox(
                             width: double.infinity,
                             height: 48,
@@ -169,9 +195,17 @@ class _LoginPageState extends State<LoginPage> {
 
                                 final prefs =
                                     await SharedPreferences.getInstance();
+                                final response = await Supabase
+                                    .instance
+                                    .client
+                                    .auth
+                                    .signInWithPassword(
+                                      email: email,
+                                      password: password,
+                                    );
 
-                                if (email == 'admin@admin.com' &&
-                                    password == 'admin123') {
+                                if (response.session != null) {
+                                  // print('Login berhasil');
                                   await prefs.setBool('isLoggedIn', true);
                                   await prefs.setString('role', 'admin');
 
@@ -183,16 +217,30 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                   );
                                 } else {
-                                  await prefs.setBool('isLoggedIn', true);
-                                  await prefs.setString('role', 'user');
-
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const Homepage(),
-                                    ),
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (context) => AlertDialog(
+                                          title: Text('login gagal'),
+                                          content: Text(
+                                            'email atau password salah',
+                                          ),
+                                        ),
                                   );
                                 }
+                                // if (email == 'admin@admin.com' &&
+                                //     password == 'admin123') {}
+                                // else {
+                                // await prefs.setBool('isLoggedIn', true);
+                                // await prefs.setString('role', 'user');
+
+                                // Navigator.pushReplacement(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) => const Homepage(),
+                                //   ),
+                                // );
+                                // }
                               },
                               child: const Text(
                                 'Login',

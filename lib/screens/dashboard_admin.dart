@@ -1,7 +1,7 @@
 import 'package:cookie_jar/login/login.dart';
+import 'package:cookie_jar/screens/homescreen.dart';
 import 'package:cookie_jar/widgets/card_data_insight.dart';
 import 'package:cookie_jar/widgets/create_product.dart';
-import 'package:cookie_jar/widgets/detail_produck.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -20,7 +20,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
   List data = [];
   Map? selectedProduct;
   bool showDetail = false;
-  String role = 'Admin'; // Role di-set ke Admin
+  String role = 'Admin';
 
   final formatRupiah = NumberFormat.currency(
     locale: 'id_ID',
@@ -46,7 +46,6 @@ class _DashboardAdminState extends State<DashboardAdmin> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // <<<<<<< HEAD
         title: const Text('Daftar Kue Kering'),
         backgroundColor: Colors.red,
         actions: [
@@ -59,120 +58,86 @@ class _DashboardAdminState extends State<DashboardAdmin> {
               if (!context.mounted) return;
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
+                MaterialPageRoute(builder: (context) => Homepage()),
               );
             },
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Column(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Column(
+          children: [
+            // Row pencarian dan tambah produk
+            Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 50,
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Cari di sini...',
-                            hintStyle: GoogleFonts.dmSans(
-                              color: Colors.black,
-                              fontSize: 16,
-                            ),
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.search),
-                          ),
+                Expanded(
+                  child: SizedBox(
+                    height: 50,
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Cari di sini...',
+                        hintStyle: GoogleFonts.dmSans(
+                          color: Colors.black,
+                          fontSize: 16,
                         ),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.search),
                       ),
                     ),
-                    SizedBox(width: 10),
-                    if (role == 'Admin')
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                        ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const SubmitForm(),
-                          );
-                        },
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        label: const Text(
-                          'Tambah Produk',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: cardDataInsight(
-                              title: 'Jumlah Produk',
-                              amount: data.length,
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: cardDataInsight(
-                              title: 'Jumlah Pengguna',
-                              amount: 100, // Ganti jika bisa dinamis
-                            ),
-                          ),
-                        ],
-                      ),
-                      // const SizedBox(height: 20),
-                      SizedBox(
-                        height: constraints.maxHeight * 0.6,
-                        child: _buildGridView(),
-                      ),
-                      const SizedBox(height: 20),
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 16,
-                        children: [
-                          SizedBox(
-                            width: 300,
-                            child: cardDataInsight(
-                              title: 'Jumlah Produk',
-                              amount: 10,
-                            ),
-                          ),
-                          SizedBox(
-                            width: 300,
-                            child: cardDataInsight(
-                              title: 'Jumlah Pengguna',
-                              amount: 20,
-                            ),
-                          ),
-                          // dst.
-                        ],
-                      ),
-                    ],
                   ),
+                ),
+                const SizedBox(width: 10),
+                if (role == 'Admin')
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => Dialog(child: submitForm()),
+                      );
+                    },
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Tambah Produk',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Data insight
+            Row(
+              children: [
+                Expanded(
+                  child: cardDataInsight(
+                    title: 'Jumlah Produk',
+                    amount: data.length,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: cardDataInsight(title: 'Jumlah Pengguna', amount: 100),
                 ),
               ],
             ),
-          );
-        },
+            const SizedBox(height: 20),
+
+            // Expanded grid agar tidak overflow
+            Expanded(child: _buildGridView()),
+          ],
+        ),
       ),
     );
   }
@@ -185,8 +150,6 @@ class _DashboardAdminState extends State<DashboardAdmin> {
         itemsPerRow = itemsPerRow < 1 ? 1 : itemsPerRow;
 
         double spacing = 20;
-        double itemWidth =
-            (screenWidth - ((itemsPerRow + 1) * spacing)) / itemsPerRow;
 
         return GridView.builder(
           padding: EdgeInsets.all(spacing),
