@@ -1,13 +1,11 @@
-import 'package:cookie_jar/database/auth.dart';
-import 'package:cookie_jar/database/get_data.dart';
-import 'package:cookie_jar/login/login.dart';
-import 'package:cookie_jar/screens/homescreen.dart';
-// import 'package:cookie_jar/database/simpan.dart';
-// import 'package:cookie_jar/view/homepage.dart';
+import 'package:cookie_jar/screens/dashboard_admin.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cookie_jar/screens/homescreen.dart';
+import 'package:cookie_jar/login/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() async{
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
     url: 'https://namsmqlsgletflprfurx.supabase.co',
@@ -19,16 +17,39 @@ void main() async{
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  Future<Widget> getStartPage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final role = prefs.getString('role') ?? 'user';
+
+    if (isLoggedIn) {
+      if (role == 'admin') {
+        return const DashboardAdmin();
+      } else {
+        return const Homepage();
+      }
+    } else {
+      return LoginPage();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Cookie Jar',
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      home: FutureBuilder(
+        future: getStartPage(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          } else {
+            return snapshot.data as Widget;
+          }
+        },
       ),
-      home: LoginPage(),
     );
   }
 }

@@ -1,7 +1,9 @@
+import 'package:cookie_jar/login/login.dart';
 import 'package:cookie_jar/widgets/create_product.dart';
 import 'package:cookie_jar/widgets/detail_produck.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Homepage extends StatefulWidget {
@@ -12,7 +14,6 @@ class Homepage extends StatefulWidget {
   @override
   State<Homepage> createState() => _HomepageState();
 }
-
 
 class _HomepageState extends State<Homepage> {
   final supabase = Supabase.instance.client;
@@ -59,8 +60,25 @@ class _HomepageState extends State<Homepage> {
                 );
               },
             ),
+
+          // Tombol Logout, ditampilkan untuk semua role
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear(); // Hapus session login
+
+              if (!context.mounted) return;
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
+          ),
         ],
       ),
+
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
         child: LayoutBuilder(

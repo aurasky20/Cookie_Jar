@@ -1,6 +1,8 @@
+import 'package:cookie_jar/screens/dashboard_admin.dart';
 import 'package:flutter/material.dart';
 import 'package:cookie_jar/screens/homescreen.dart';
 import 'package:cookie_jar/login/regis.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({super.key});
@@ -161,28 +163,33 @@ class _LoginPageState extends State<LoginPage> {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              onPressed: () {
+                              onPressed: () async {
                                 final email = emailController.text.trim();
                                 final password = passwordController.text;
 
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+
                                 if (email == 'admin@admin.com' &&
                                     password == 'admin123') {
-                                  Navigator.push(
+                                  await prefs.setBool('isLoggedIn', true);
+                                  await prefs.setString('role', 'admin');
+
+                                  Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (context) =>
-                                              const Homepage(role: 'Admin',), // bisa ganti Homepage(role: 'Admin')
+                                          (context) => const DashboardAdmin(),
                                     ),
                                   );
                                 } else {
-                                  // Login pembeli atau gagal (bisa tambahkan validasi login pembeli juga)
-                                  Navigator.push(
+                                  await prefs.setBool('isLoggedIn', true);
+                                  await prefs.setString('role', 'user');
+
+                                  Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder:
-                                          (context) =>
-                                              const Homepage(), // ganti juga kalau pakai role
+                                      builder: (context) => const Homepage(),
                                     ),
                                   );
                                 }

@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:cookie_jar/login/regis.dart';
 import 'package:cookie_jar/login/login.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class RegisPage extends StatelessWidget {
+class RegisPage extends StatefulWidget {
   const RegisPage({super.key});
+
+  @override
+  State<RegisPage> createState() => _RegisPageState();
+}
+
+class _RegisPageState extends State<RegisPage> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  final supabase = Supabase.instance.client;  
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +114,7 @@ class RegisPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           TextField(
+                            controller: emailController,
                             decoration: InputDecoration(
                               hintText: 'Masukkan Email',
                               border: OutlineInputBorder(
@@ -125,6 +136,7 @@ class RegisPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           TextField(
+                            controller: passwordController,
                             obscureText: true,
                             decoration: InputDecoration(
                               hintText: 'Masukkan Kata Sandi',
@@ -147,6 +159,7 @@ class RegisPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           TextField(
+                            controller: confirmPasswordController,
                             obscureText: true,
                             decoration: InputDecoration(
                               hintText: 'Konfirmasi Kata Sandi',
@@ -172,12 +185,7 @@ class RegisPage extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              onPressed: () {
-                                Navigator.push(context,
-                                MaterialPageRoute(
-                                  builder: (context) => LoginPage()),
-                                );
-                              },
+                              onPressed: () => insert(context),
                               child: const Text(
                                 'Registrasi',
                                 style: TextStyle(
@@ -227,4 +235,44 @@ class RegisPage extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> insert(BuildContext context) async {
+  final email = emailController.text.trim();
+  final password = passwordController.text.trim();
+  final confirmPassword = confirmPasswordController.text.trim();
+
+  if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Semua field harus diisi')),
+    );
+    return;
+  }
+
+  if (password != confirmPassword) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Konfirmasi password tidak cocok')),
+    );
+    return;
+  }
+
+  try {
+    final response = await supabase.from('pembeli').insert({
+      'email': email,
+      'password': password,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Registrasi berhasil!')),
+    );
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Gagal registrasi: $e')),
+    );
+  }
+}
 }
