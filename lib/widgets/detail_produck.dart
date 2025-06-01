@@ -16,85 +16,259 @@ class DetailPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final formatRupiah = NumberFormat.currency(
       locale: 'id_ID',
-      symbol: 'Rp ',
+      symbol: 'IDR ',
       decimalDigits: 0,
     );
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xffF3F3F3),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      constraints: BoxConstraints(maxHeight: height),
-      width: 500,
       height: height,
-      child: ListView(
+      decoration: const BoxDecoration(
+        color: Color(0xffFFF8E1), // Light cream background
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          bottomLeft: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 15,
+            offset: Offset(-5, 0),
+          ),
+        ],
+      ),
+      child: Column(
         children: [
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment
-                    .spaceBetween, // supaya teks dan ikon di ujung kanan kiri
-            children: [
-              const Text(
-                'Detail menu',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-              ),
-              IconButton(icon: const Icon(Icons.close), onPressed: onClose),
-            ],
+          // Header with close button
+          Container(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Detail Menu',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xff5D4037),
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Yuk cek detail menunya!',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xff8D6E63),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: onClose,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: Color(0xffFFAB40),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
 
-          const SizedBox(height: 20),
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Image
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      height: 250,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child:
+                          product['link_foto'] != null
+                              ? Image.network(
+                                product['link_foto'],
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                },
+                              )
+                              : Container(
+                                color: Colors.grey[300],
+                                child: const Icon(
+                                  Icons.image,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Product Name and Category
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product['nama_produk'] ?? 'Nama Produk',
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xff5D4037),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Cookies',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xffA1887F),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                      Text(
+                        formatRupiah.format(product['harga'] ?? 0),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xff5D4037),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Stock Information
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffFFE0B2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Stok : ${product['stok'] ?? 0}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xff5D4037),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Description
+                  const Text(
+                    'Deskripsi Produk',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff5D4037),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    product['deskripsi'] ?? 'Tidak ada deskripsi tersedia.',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xffA1887F),
+                      height: 1.6,
+                    ),
+                    textAlign: TextAlign.justify,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Composition if available
+                  if (product['komposisi'] != null &&
+                      product['komposisi'].toString().isNotEmpty) ...[
+                    const Text(
+                      'Komposisi',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff5D4037),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      product['komposisi'],
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xffA1887F),
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ],
+              ),
+            ),
+          ),
+
+          // Checkout Button - Fixed at bottom
           Container(
-            height: 300,
-            decoration: BoxDecoration(
-              color: Colors.grey,
-              image: DecorationImage(
-                image: NetworkImage(product['link_foto']),
-                fit: BoxFit.cover,
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                product['nama_produk'] ?? '-',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
+            padding: const EdgeInsets.all(24),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  // Add checkout functionality here
+                  print('Checkout pressed for ${product['nama_produk']}');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xffFF8A50),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'Check Out',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              Text(
-                formatRupiah.format(product['harga'] ?? 0),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text("Stock : ${product['stok'] ?? '-'}"),
-          const SizedBox(height: 20),
-          Text(product['deskripsi'] ?? 'Tidak ada deskripsi'),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber,
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              elevation: 1,
-            ),
-            child: const Text(
-              'Checkout',
-              style: TextStyle(color: Colors.black),
             ),
           ),
         ],

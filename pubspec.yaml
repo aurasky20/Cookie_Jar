@@ -9,14 +9,17 @@ environment:
   sdk: ^3.7.2
 
 dependencies:
-  shared_preferences: ^2.5.3
-  supabase_flutter: ^2.9.0
-  intl: ^0.20.2
   flutter:
     sdk: flutter
   google_fonts: ^6.1.0
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.9
+  shared_preferences: ^2.5.3
+  supabase_flutter: ^2.9.0
+  intl: ^0.20.2
+  provider: ^6.1.5
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -30,4 +33,11 @@ flutter:
     - assets/images/background.jpg
     - assets/images/cookie.svg
     - assets/images/cookie.png
-    - assets/font/Lobster/Lobster-Regular.ttf
+    - assets/images/carousel1.png
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins/Poppins-Bold.ttf
+          weight: 700
