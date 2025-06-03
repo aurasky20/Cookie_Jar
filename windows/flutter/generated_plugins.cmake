@@ -3,7 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  amplify_db_common
   app_links
   file_selector_windows
   url_launcher_windows

@@ -38,7 +38,6 @@ class DetailPanel extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header with close button
           Container(
             padding: const EdgeInsets.all(24),
             child: Row(

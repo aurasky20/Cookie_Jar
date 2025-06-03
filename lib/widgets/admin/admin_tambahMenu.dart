@@ -1,12 +1,13 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data'; // Untuk Uint8List
-import 'package:cookie_jar/utils/Utils.dart';
 import 'package:flutter/foundation.dart' show kIsWeb; // Untuk kIsWeb
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:http/http.dart' as http;
 
 class AdminTambahMenuWidget extends StatefulWidget {
   final double height;
@@ -34,13 +35,8 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
   final _komposisiController = TextEditingController();
   final _deskripsiController = TextEditingController();
 
-  File? _selectedImageFile; // Untuk mobile/desktop
-  Uint8List? _selectedImageBytes; // Untuk pratinjau di web
-  String? _selectedImageName; // Untuk nama file dan ekstensi
-
   Uri? imageUrl; // Untuk menyimpan URL gambar yang diunggah
 
-  bool _isLoading = false;
   final _picker = ImagePicker();
 
   String displayImageUrl = '';
@@ -55,98 +51,135 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
     super.dispose();
   }
 
-  String extractImagePath(String fullUrl) {
-    final regex = RegExp(
-      r'^.*?\.(jpg|png|jpeg|gif|webp|bmp)',
-      caseSensitive: false,
-    );
-    final match = regex.firstMatch(fullUrl);
-
-    debugPrint('Extracted image path: $match');
-    return match?.group(0) ?? '';
-  }
-
-  upload() async {
-    try {
-      imageUrl = await Utils.pickAndUploadImage();
-
-      displayImageUrl = extractImagePath(imageUrl.toString());
-
-      if (imageUrl != null) {
-        _showSnackBar('Gambar berhasil diunggah: $imageUrl');
-      } else {
-        _showSnackBar('Gagal mengunggah gambar', isError: true);
-      }
-      setState(() {});
-    } catch (e) {
-      _showSnackBar('Error: $e', isError: true);
-    }
-  }
-
-  // Future<void> _pickImage() async {
+  // upload() async {
   //   try {
-  //     final XFile? image = await _picker.pickImage(
-  //       source: ImageSource.gallery,
-  //       maxWidth: 1024,
-  //       maxHeight: 1024,
-  //       imageQuality: 80,
-  //     );
-
-  //     if (image != null) {
-  //       final bytes = await image.readAsBytes();
-  //       if (!mounted) return;
-  //       setState(() {
-  //         if (kIsWeb) {
-  //           _selectedImageBytes = bytes;
-  //         } else {
-  //           _selectedImageFile = File(image.path);
-  //         }
-  //         _selectedImageName = image.name; // Simpan nama file untuk ekstensi
-  //       });
+  //     imageUrl = await Utils.pickAndUploadImage();
+  //     if (imageUrl != null) {
+  //       _showSnackBar('Gambar berhasil diunggah: $imageUrl');
+  //     } else {
+  //       _showSnackBar('Gagal mengunggah gambar', isError: true);
   //     }
+  //     setState(() {});
   //   } catch (e) {
-  //     if (!mounted) return;
-  //     _showSnackBar('Error memilih gambar: $e', isError: true);
+  //     _showSnackBar('Error: $e', isError: true);
   //   }
   // }
 
-  Future<String?> _uploadImage() async {
-    if (_selectedImageFile == null && _selectedImageBytes == null) return null;
-    if (_selectedImageName == null) return null;
+  // Future<String?> _uploadImage() async {
+  //   if (_selectedImageFile == null && _selectedImageBytes == null) return null;
+  //   if (_selectedImageName == null) return null;
+
+  //   try {
+  //     // Mendapatkan ekstensi dari nama file
+  //     final fileExtension = _selectedImageName!.split('.').last;
+  //     final fileName =
+  //         'product_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+
+  //     final Uint8List imageBytes;
+  //     if (kIsWeb) {
+  //       imageBytes = _selectedImageBytes!;
+  //     } else {
+  //       imageBytes = await _selectedImageFile!.readAsBytes();
+  //     }
+
+  //     await supabase.storage
+  //         .from('products')
+  //         .uploadBinary(
+  //           fileName,
+  //           imageBytes, // Gunakan imageBytes untuk upload
+  //           fileOptions: FileOptions(
+  //             contentType: 'image/$fileExtension',
+  //             upsert: false,
+  //           ),
+  //         );
+
+  //     return supabase.storage.from('products').getPublicUrl(fileName);
+  //   } catch (e) {
+  //     throw Exception('Error mengunggah gambar: $e');
+  //   }
+  // }
+
+  XFile? _pickedXFile; // XFile dari image_picker
+  String? _uploadedUrl;
+  bool _isUploading = false;
+
+  Future<void> uploadToS3() async {
+    if (_pickedXFile == null) return;
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    // Buat nama file unik
+    final fileName = 'flutter_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final bucketUrl =
+        'https://webcookiejar5a099-dev.s3.ap-southeast-2.amazonaws.com/product/$fileName';
 
     try {
-      // Mendapatkan ekstensi dari nama file
-      final fileExtension = _selectedImageName!.split('.').last;
-      final fileName =
-          'product_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
-
-      final Uint8List imageBytes;
+      // Baca bytes dengan cara yang sesuai
+      late final Uint8List bytes;
       if (kIsWeb) {
-        imageBytes = _selectedImageBytes!;
+        // Di web, XFile punya method readAsBytes()
+        bytes = await _pickedXFile!.readAsBytes();
       } else {
-        imageBytes = await _selectedImageFile!.readAsBytes();
+        // Di mobile/desktop, kita bisa konversi XFile ke File dart:io
+        final file = File(_pickedXFile!.path);
+        bytes = await file.readAsBytes();
       }
 
-      await supabase.storage
-          .from('products')
-          .uploadBinary(
-            fileName,
-            imageBytes, // Gunakan imageBytes untuk upload
-            fileOptions: FileOptions(
-              contentType: 'image/$fileExtension',
-              upsert: false,
-            ),
-          );
+      final response = await http.put(
+        Uri.parse(bucketUrl),
+        headers: {'Content-Type': 'image/jpeg'},
+        body: bytes,
+      );
 
-      return supabase.storage.from('products').getPublicUrl(fileName);
+      if (response.statusCode == 200) {
+        setState(() {
+          _uploadedUrl = bucketUrl;
+          _isUploading = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('✅ Upload berhasil!')));
+      } else {
+        setState(() {
+          _isUploading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Upload gagal: HTTP ${response.statusCode}'),
+          ),
+        );
+      }
     } catch (e) {
-      throw Exception('Error mengunggah gambar: $e');
+      setState(() {
+        _isUploading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('❌ Error saat upload: $e')));
     }
+  }
+
+  Future<void> pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _pickedXFile = picked;
+        _uploadedUrl = null;
+      });
+    }
+  }
+
+  int generate5DigitRandom() {
+    final _random = Random();
+    return 10000 + _random.nextInt(90000);
   }
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedImageFile == null && _selectedImageBytes == null) {
+    if (_pickedXFile == null) {
       // Cek keduanya
       _showSnackBar('Silakan pilih gambar produk.', isError: true);
       return;
@@ -154,12 +187,15 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
 
     if (!mounted) return;
     setState(() {
-      _isLoading = true;
+      _isUploading = true;
     });
 
     try {
-      String? imageUrl = await _uploadImage();
-      if (imageUrl == null) {
+      if (_pickedXFile != null) {
+        // Jika ada gambar yang dipilih, upload ke S3
+        await uploadToS3();
+      }
+      if (_uploadedUrl == null) {
         throw Exception('Gagal mengunggah gambar');
       }
 
@@ -169,10 +205,12 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
         'stok': int.parse(_stokController.text.trim()),
         'komposisi': _komposisiController.text.trim(),
         'deskripsi': _deskripsiController.text.trim(),
-        'link_foto': imageUrl,
+        'link_foto': _uploadedUrl,
         'terjual': 0,
+        'id' : generate5DigitRandom(),
       });
 
+      print('✅ Produk berhasil ditambahkan: ${_namaController.text.trim()}');
       if (!mounted) return;
       widget.onSuccess();
     } catch (e) {
@@ -181,7 +219,7 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
     } finally {
       if (!mounted) return;
       setState(() {
-        _isLoading = false;
+        _isUploading = false;
       });
     }
   }
@@ -195,32 +233,6 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
       ),
     );
   }
-
-  // Widget _buildImagePreview() {
-  //   if (kIsWeb && _selectedImageBytes != null) {
-  //     return ClipRRect(
-  //       borderRadius: BorderRadius.circular(11),
-  //       child: Image.memory(
-  //         _selectedImageBytes!,
-  //         fit: BoxFit.cover,
-  //         width: 150,
-  //         height: 150,
-  //       ),
-  //     );
-  //   } else if (!kIsWeb && _selectedImageFile != null) {
-  //     return ClipRRect(
-  //       borderRadius: BorderRadius.circular(11),
-  //       child: Image.file(
-  //         _selectedImageFile!,
-  //         fit: BoxFit.cover,
-  //         width: 150,
-  //         height: 150,
-  //       ),
-  //     );
-  //   } else {
-
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -258,11 +270,12 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                     Center(
                       child: GestureDetector(
                         onTap: () {
-                          upload();
+                          pickImage();
                         },
                         child: Container(
-                          width: 500,
-                          height: 500,
+                          padding: EdgeInsets.symmetric(horizontal: 15),
+                          width: 550,
+                          height: 300,
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(12),
@@ -272,7 +285,7 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                             ),
                           ),
                           child:
-                              (imageUrl == null)
+                              (_pickedXFile == null)
                                   ? Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -292,7 +305,7 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                                     ],
                                   )
                                   : Image.network(
-                                    displayImageUrl,
+                                    _pickedXFile!.path,
                                     fit: BoxFit.cover,
                                     height: 500,
                                   ),
@@ -358,11 +371,11 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          if (imageUrl == null) {
+                          if (_pickedXFile == null) {
                             _showSnackBar('Silahkan pilih gambar!');
                             return;
                           }
-                          _submitForm;
+                          _submitForm.call();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xffFF8E37),
@@ -372,7 +385,7 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                           ),
                         ),
                         child:
-                            _isLoading
+                            _isUploading
                                 ? const SizedBox(
                                   width: 20,
                                   height: 20,
