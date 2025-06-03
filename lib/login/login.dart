@@ -1,4 +1,5 @@
-import 'package:cookie_jar/screens/dashboard_admin.dart';
+
+import 'package:cookie_jar/screens/admin/admin_homepage_screen.dart';
 import 'package:cookie_jar/screens/homepage_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cookie_jar/login/regis.dart';
@@ -213,7 +214,7 @@ class _LoginPageState extends State<LoginPage> {
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (context) => const DashboardAdmin(),
+                                          (context) => const AdminHomepageScreen(),
                                     ),
                                   );
                                 } else {

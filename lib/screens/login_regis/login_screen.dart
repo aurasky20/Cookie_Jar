@@ -1,5 +1,5 @@
 // LoginScreen.dart
-import 'package:cookie_jar/screens/dashboard_admin.dart';
+import 'package:cookie_jar/screens/admin/admin_homepage_screen.dart';
 import 'package:cookie_jar/screens/homepage_screen.dart';
 import 'package:cookie_jar/screens/login_regis/registrasi_screen.dart';
 import 'package:flutter/material.dart';
@@ -38,17 +38,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email dan password harus diisi')));
-      setState(() { _isLoading = false; });
+        const SnackBar(content: Text('Email dan password harus diisi')),
+      );
+      setState(() {
+        _isLoading = false;
+      });
       return;
     }
 
     try {
-      final AuthResponse authResponse =
-          await _supabaseClient.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
+      final AuthResponse authResponse = await _supabaseClient.auth
+          .signInWithPassword(email: email, password: password);
 
       if (!mounted) return;
 
@@ -56,13 +56,16 @@ class _LoginScreenState extends State<LoginScreen> {
         final userId = authResponse.user!.id;
 
         // Ambil role dari tabel Users
-        final profileResponse = await _supabaseClient
-            .from('Users')
-            .select('role')
-            .eq('id', userId)
-            .single(); // .single() akan error jika tidak ada atau lebih dari 1, pastikan RLS benar
+        final profileResponse =
+            await _supabaseClient
+                .from('Users')
+                .select('role')
+                .eq('id', userId)
+                .single(); // .single() akan error jika tidak ada atau lebih dari 1, pastikan RLS benar
 
-        final userRole = profileResponse['role'] as String? ?? 'pembeli'; // Default ke 'pembeli'
+        final userRole =
+            profileResponse['role'] as String? ??
+            'pembeli'; // Default ke 'pembeli'
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
@@ -70,34 +73,45 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('userId', userId);
         await prefs.setString('userRole', userRole); // Simpan role
 
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Login berhasil!')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login berhasil!')));
 
         if (userRole == 'admin') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const DashboardAdmin()),
+            MaterialPageRoute(
+              builder: (context) => const AdminHomepageScreen(),
+            ),
           );
-        } else { // 'pembeli' atau role lain
+        } else {
+          // 'pembeli' atau role lain
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomepageScreen()), // Ganti dengan halaman pembeli Anda
+            MaterialPageRoute(
+              builder: (context) => const HomepageScreen(),
+            ), // Ganti dengan halaman pembeli Anda
           );
         }
       } else {
         // Ini jarang terjadi jika signInWithPassword tidak melempar error,
         // tapi sebagai fallback jika user null tanpa exception.
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login gagal: Pengguna tidak ditemukan.')));
+          const SnackBar(
+            content: Text('Login gagal: Pengguna tidak ditemukan.'),
+          ),
+        );
       }
     } on AuthException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Login gagal: ${e.message}')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login gagal: ${e.message}')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
     } finally {
       if (!mounted) return;
       setState(() {
@@ -130,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-           Positioned.fill(
+          Positioned.fill(
             child: Image.asset(
               'assets/images/background.jpg', // ganti sesuai path gambar Anda
               fit: BoxFit.cover,
@@ -147,8 +161,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Row(
                 children: [
-                  Expanded( /* ... Bagian Kiri ... */
-                     child: Container(
+                  Expanded(
+                    /* ... Bagian Kiri ... */
+                    child: Container(
                       decoration: const BoxDecoration(
                         color: Color(0xFFFF6A1A),
                         borderRadius: BorderRadius.only(
@@ -186,7 +201,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  Expanded( /* ... Bagian Kanan: Form Login ... */
+                  Expanded(
+                    /* ... Bagian Kanan: Form Login ... */
                     child: Container(
                       decoration: const BoxDecoration(
                         color: Colors.white,
@@ -195,10 +211,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           bottomRight: Radius.circular(24),
                         ),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 40,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center, // Diubah agar form lebih ke tengah
+                        mainAxisAlignment:
+                            MainAxisAlignment
+                                .center, // Diubah agar form lebih ke tengah
                         children: [
                           const Text(
                             'Login Akun',
@@ -209,26 +230,50 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 42),
-                          const Text('Email', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                          const Text(
+                            'Email',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           TextField(
                             controller: emailController,
                             decoration: InputDecoration(
                               hintText: 'Masukkan Email',
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15), // Sesuai kode Anda
-                                borderSide: BorderSide(color: Colors.orangeAccent)
+                                borderRadius: BorderRadius.circular(
+                                  15,
+                                ), // Sesuai kode Anda
+                                borderSide: BorderSide(
+                                  color: Colors.orangeAccent,
+                                ),
                               ),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 14,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 18),
-                          const Text('Kata Sandi', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                          const Text(
+                            'Kata Sandi',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15), // Sesuai kode Anda
+                              borderRadius: BorderRadius.circular(
+                                15,
+                              ), // Sesuai kode Anda
                               border: Border.all(color: Colors.orangeAccent),
                             ),
                             child: Row(
@@ -249,7 +294,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                       obscure = !obscure;
                                     });
                                   },
-                                  icon: Icon(obscure ? Icons.visibility : Icons.visibility_off),
+                                  icon: Icon(
+                                    obscure
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
                                 ),
                               ],
                             ),
@@ -268,29 +317,44 @@ class _LoginScreenState extends State<LoginScreen> {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              onPressed: _isLoading ? null : () => _signIn(context), // GANTI DI SINI
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                                    )
-                                  : const Text(
-                                      'Login',
-                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                                    ),
+                              onPressed:
+                                  _isLoading
+                                      ? null
+                                      : () => _signIn(context), // GANTI DI SINI
+                              child:
+                                  _isLoading
+                                      ? const SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
+                                        ),
+                                      )
+                                      : const Text(
+                                        'Login',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                             ),
                           ),
                           const SizedBox(height: 20),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text('Belum punya akun? Yuk langsung ', style: TextStyle(fontSize: 14)),
+                              const Text(
+                                'Belum punya akun? Yuk langsung ',
+                                style: TextStyle(fontSize: 14),
+                              ),
                               GestureDetector(
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (context) => const RegisScreen()),
+                                    MaterialPageRoute(
+                                      builder: (context) => const RegisScreen(),
+                                    ),
                                   );
                                 },
                                 child: const Text(
@@ -304,7 +368,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ],
                           ),
-                           const SizedBox(height: 20), // Memberi sedikit ruang di bawah
+                          const SizedBox(
+                            height: 20,
+                          ), // Memberi sedikit ruang di bawah
                         ],
                       ),
                     ),

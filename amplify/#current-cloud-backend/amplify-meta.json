@@ -1,0 +1,75 @@
+{
+  "providers": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-cookiejar-dev-5a099-authRole",
+      "UnauthRoleArn": "arn:aws:iam::160885294252:role/amplify-cookiejar-dev-5a099-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::160885294252:role/amplify-cookiejar-dev-5a099-authRole",
+      "Region": "ap-southeast-2",
+      "DeploymentBucketName": "amplify-cookiejar-dev-5a099-deployment",
+      "UnauthRoleName": "amplify-cookiejar-dev-5a099-unauthRole",
+      "StackName": "amplify-cookiejar-dev-5a099",
+      "StackId": "arn:aws:cloudformation:ap-southeast-2:160885294252:stack/amplify-cookiejar-dev-5a099/532e7200-4066-11f0-a87b-0acb0142d97f",
+      "AmplifyAppId": "d3a6h15nr5is8"
+    }
+  },
+  "auth": {
+    "cookiejarbfd937d8": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false,
+      "frontendAuthConfig": {
+        "socialProviders": [],
+        "usernameAttributes": [
+          "EMAIL"
+        ],
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyMinLength": 8,
+          "passwordPolicyCharacters": []
+        },
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      },
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-cookiejar-dev-5a099-deployment/amplify-cfn-templates/auth/cookiejarbfd937d8-cloudformation-template.json",
+        "logicalId": "authcookiejarbfd937d8"
+      },
+      "lastPushTimeStamp": "2025-06-03T10:42:47.038Z",
+      "output": {
+        "UserPoolId": "ap-southeast-2_AWu9ltVln",
+        "AppClientIDWeb": "2lj63m86e0rbvhkfme0dmadffr",
+        "AppClientID": "7chnpftc56uofjkon7qi14blmg",
+        "IdentityPoolId": "ap-southeast-2:2b3f7104-0837-4a0a-8fa7-ac248af8835a",
+        "UserPoolArn": "arn:aws:cognito-idp:ap-southeast-2:160885294252:userpool/ap-southeast-2_AWu9ltVln",
+        "IdentityPoolName": "cookiejarbfd937d8_identitypool_bfd937d8__dev",
+        "UserPoolName": "cookiejarbfd937d8_userpool_bfd937d8"
+      },
+      "lastPushDirHash": "qN+aj7ZA7JIYnBeX6FAXYUc/VGI="
+    }
+  },
+  "storage": {
+    "cookie": {
+      "service": "S3",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "lastPushTimeStamp": "2025-06-03T10:42:47.038Z",
+      "providerMetadata": {
+        "s3TemplateURL": "https://s3.amazonaws.com/amplify-cookiejar-dev-5a099-deployment/amplify-cfn-templates/storage/cloudformation-template.json",
+        "logicalId": "storagecookie"
+      },
+      "output": {
+        "BucketName": "webcookiejar5a099-dev",
+        "Region": "ap-southeast-2"
+      },
+      "lastPushDirHash": "WLtwGk3jLOiSl7s8qiAVCceoZrE="
+    }
+  }
+}
