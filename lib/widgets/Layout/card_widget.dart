@@ -122,10 +122,10 @@ class _CardWidgetState extends State<CardWidget> {
                   Text(
                     widget.cookie.komposisi,
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

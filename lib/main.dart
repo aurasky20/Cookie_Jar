@@ -24,7 +24,6 @@ class MyApp extends StatelessWidget {
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
     final role = prefs.getString('role') ?? 'user';
-
     if (isLoggedIn) {
       if (role == 'admin') {
         return const AdminHomepageScreen();
@@ -48,8 +47,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      // home: HomepageScreen(),
-      // home: AdminHomepageScreen(),
       home: FutureBuilder(
         future: getStartPage(),
         builder: (context, snapshot) {

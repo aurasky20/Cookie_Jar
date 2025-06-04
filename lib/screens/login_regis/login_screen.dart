@@ -1,9 +1,8 @@
-// LoginScreen.dart
 import 'package:cookie_jar/screens/admin/admin_homepage_screen.dart';
 import 'package:cookie_jar/screens/homepage_screen.dart';
 import 'package:cookie_jar/screens/login_regis/registrasi_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Anda masih bisa menggunakannya untuk sesi
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,134 +15,15 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final _supabaseClient = Supabase.instance.client;
+
   var obscure = true;
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _signIn(BuildContext context) async {
-    if (!mounted) return;
-    setState(() {
-      _isLoading = true;
-    });
-
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email dan password harus diisi')),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-    }
-
-    try {
-      final AuthResponse authResponse = await _supabaseClient.auth
-          .signInWithPassword(email: email, password: password);
-
-      if (!mounted) return;
-
-      if (authResponse.user != null) {
-        final userId = authResponse.user!.id;
-
-        // Ambil role dari tabel Users
-        final profileResponse =
-            await _supabaseClient
-                .from('Users')
-                .select('role')
-                .eq('id', userId)
-                .single(); // .single() akan error jika tidak ada atau lebih dari 1, pastikan RLS benar
-
-        final userRole =
-            profileResponse['role'] as String? ??
-            'pembeli'; // Default ke 'pembeli'
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isLoggedIn', true);
-        await prefs.setString('userEmail', email);
-        await prefs.setString('userId', userId);
-        await prefs.setString('userRole', userRole); // Simpan role
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login berhasil!')));
-
-        if (userRole == 'admin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AdminHomepageScreen(),
-            ),
-          );
-        } else {
-          // 'pembeli' atau role lain
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const HomepageScreen(),
-            ), // Ganti dengan halaman pembeli Anda
-          );
-        }
-      } else {
-        // Ini jarang terjadi jika signInWithPassword tidak melempar error,
-        // tapi sebagai fallback jika user null tanpa exception.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login gagal: Pengguna tidak ditemukan.'),
-          ),
-        );
-      }
-    } on AuthException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login gagal: ${e.message}')));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
-    } finally {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    // ... (UI Anda tetap sama, hanya modifikasi tombol onPressed dan loading state)
-    // Contoh modifikasi pada ElevatedButton:
-    // child: ElevatedButton(
-    //   onPressed: _isLoading ? null : () => _signIn(context),
-    //   child: _isLoading
-    //       ? const SizedBox(
-    //           height: 20,
-    //           width: 20,
-    //           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0),
-    //         )
-    //       : const Text('Login'),
-    //   // ... sisa style Anda
-    // ),
-
-    // ... (Sisa UI Anda yang sudah ada)
-    // Ganti onPressed pada ElevatedButton Anda dari logika lama menjadi:
-    // onPressed: _isLoading ? null : () => _signIn(context),
-    // Dan jika _isLoading true, tampilkan CircularProgressIndicator di dalam tombol.
-    // Contoh lengkap untuk tombol:
     return Scaffold(
       body: Stack(
         children: [
+          // Ganti dengan widget gambar background Anda
           Positioned.fill(
             child: Image.asset(
               'assets/images/background.jpg', // ganti sesuai path gambar Anda
@@ -152,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
               colorBlendMode: BlendMode.darken,
             ),
           ),
+
           Center(
             child: Container(
               height: 550,
@@ -161,8 +42,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Row(
                 children: [
+                  // Kiri: Card Oranye
                   Expanded(
-                    /* ... Bagian Kiri ... */
                     child: Container(
                       decoration: const BoxDecoration(
                         color: Color(0xFFFF6A1A),
@@ -201,8 +82,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+                  // Kanan: Form Login
                   Expanded(
-                    /* ... Bagian Kanan: Form Login ... */
                     child: Container(
                       decoration: const BoxDecoration(
                         color: Colors.white,
@@ -217,9 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment:
-                            MainAxisAlignment
-                                .center, // Diubah agar form lebih ke tengah
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           const Text(
                             'Login Akun',
@@ -238,21 +117,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          TextField(
-                            controller: emailController,
-                            decoration: InputDecoration(
-                              hintText: 'Masukkan Email',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  15,
-                                ), // Sesuai kode Anda
-                                borderSide: BorderSide(
-                                  color: Colors.orangeAccent,
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.grey),
+                            ),
+                            child: TextField(
+                              controller: emailController,
+                              decoration: InputDecoration(
+                                hintText: 'Masukkan Email',
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 14,
                                 ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 14,
                               ),
                             ),
                           ),
@@ -266,15 +145,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 10),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(
-                                15,
-                              ), // Sesuai kode Anda
-                              border: Border.all(color: Colors.orangeAccent),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.grey),
                             ),
                             child: Row(
                               children: [
@@ -282,9 +156,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: TextField(
                                     controller: passwordController,
                                     obscureText: obscure,
-                                    decoration: const InputDecoration(
+                                    style: TextStyle(),
+                                    decoration: InputDecoration(
                                       hintText: 'Masukkan Kata Sandi',
                                       border: InputBorder.none,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 14,
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -294,50 +174,89 @@ class _LoginScreenState extends State<LoginScreen> {
                                       obscure = !obscure;
                                     });
                                   },
-                                  icon: Icon(
-                                    obscure
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                  ),
+                                  icon:
+                                      obscure
+                                          ? Icon(Icons.visibility)
+                                          : Icon(Icons.visibility_off),
                                 ),
                               ],
                             ),
                           ),
-                          // const SizedBox(height: 60), // Anda menggunakan Expanded, jadi ini mungkin tidak perlu
-                          const Spacer(), // Menggunakan Spacer untuk mendorong tombol ke bawah
+                          Expanded(child: const SizedBox()),
                           SizedBox(
                             width: double.infinity,
                             height: 48,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFF6A1A),
+                                backgroundColor: Color(0xFFFF6A1A),
                                 foregroundColor: Colors.white,
                                 overlayColor: Colors.transparent,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              onPressed:
-                                  _isLoading
-                                      ? null
-                                      : () => _signIn(context), // GANTI DI SINI
-                              child:
-                                  _isLoading
-                                      ? const SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.5,
+                              onPressed: () async {
+                                final email = emailController.text.trim();
+                                final password = passwordController.text;
+
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final response = await Supabase
+                                    .instance
+                                    .client
+                                    .auth
+                                    .signInWithPassword(
+                                      email: email,
+                                      password: password,
+                                    );
+
+                                if (response.session != null) {
+                                  // print('Login berhasil');
+                                  await prefs.setBool('isLoggedIn', true);
+                                  await prefs.setString('role', 'admin');
+
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) =>
+                                              const AdminHomepageScreen(),
+                                    ),
+                                  );
+                                } else {
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (context) => AlertDialog(
+                                          title: Text('login gagal'),
+                                          content: Text(
+                                            'email atau password salah',
+                                          ),
                                         ),
-                                      )
-                                      : const Text(
-                                        'Login',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
+                                  );
+                                }
+                                if (email == 'admin@admin.com' &&
+                                    password == 'admin123') {
+                                } else {
+                                  await prefs.setBool('isLoggedIn', true);
+                                  await prefs.setString('role', 'user');
+
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => const HomepageScreen(),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text(
+                                'Login',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),
@@ -353,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const RegisScreen(),
+                                      builder: (context) => const RegistrasiScreen(),
                                     ),
                                   );
                                 },
@@ -368,9 +287,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(
-                            height: 20,
-                          ), // Memberi sedikit ruang di bawah
                         ],
                       ),
                     ),

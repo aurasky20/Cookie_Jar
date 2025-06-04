@@ -1,12 +1,12 @@
 import 'dart:ui';
 import 'package:cookie_jar/models/cookies.dart';
+import 'package:cookie_jar/screens/homepage_screen.dart';
+import 'package:cookie_jar/screens/login_regis/login_screen.dart';
+import 'package:cookie_jar/screens/login_regis/registrasi_screen.dart';
 import 'package:cookie_jar/services/supabase_widget.dart'; // Asumsi SupabaseService ada di sini
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
-
-// Asumsikan path ini benar, sesuaikan jika perlu
-import 'package:cookie_jar/login/login.dart'; 
-import 'package:cookie_jar/login/regis.dart';
 
 class HeaderWidget extends StatefulWidget {
   final Function(List<Cookies>)? onSearchResults;
@@ -43,21 +43,26 @@ class _HeaderWidgetState extends State<HeaderWidget> {
         final response = await supabase
             .from('produk') // Asumsi tabel produk
             .select()
-            .textSearch('nama_produk', query, config: 'english'); // Sesuaikan kolom dan config
+            .textSearch(
+              'nama_produk',
+              query,
+              config: 'english',
+            ); // Sesuaikan kolom dan config
         if (response is List) {
-            results = response.map((item) => Cookies.fromJson(item)).toList();
+          results = response.map((item) => Cookies.fromJson(item)).toList();
         }
       }
       widget.onSearchResults?.call(results);
     } catch (e) {
       print('Search error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pencarian gagal: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Pencarian gagal: $e')));
       }
     } finally {
-      if (mounted) { // Tambahkan pengecekan mounted di sini juga
+      if (mounted) {
+        // Tambahkan pengecekan mounted di sini juga
         setState(() {
           _isSearching = false;
         });
@@ -69,25 +74,37 @@ class _HeaderWidgetState extends State<HeaderWidget> {
     switch (value) {
       case 'login':
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => LoginPage()));
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
         break;
       case 'register':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const RegisPage()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RegistrasiScreen()),
+        );
         break;
       case 'logout':
         try {
           await supabase.auth.signOut();
-          // Pastikan untuk mengarahkan pengguna dan membersihkan state jika perlu
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => LoginPage()),
-            (route) => false, // Hapus semua rute sebelumnya
-          );
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isLoggedIn', false);
+          await prefs.remove('role'); // Hapus role juga
+
+          // Pastikan context masih valid sebelum navigasi jika ada operasi async sebelumnya
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => HomepageScreen(),
+              ), // Navigasi ke LoginScreen
+              (route) => false,
+            );
+          }
         } catch (e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Logout gagal: $e')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Logout gagal: $e')));
           }
         }
         break;
@@ -117,11 +134,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   color: Colors.orange,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.cookie,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                child: Icon(Icons.cookie, color: Colors.white, size: 20),
               ),
               const SizedBox(width: 10),
               Text(
@@ -133,66 +146,6 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 ),
               ),
             ],
-          ),
-
-          // Search Bar
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 50),
-              child: TextField(
-                controller: _searchController,
-                onSubmitted: _performSearch,
-                style: TextStyle(color: Colors.black87), // Warna teks input
-                decoration: InputDecoration(
-                  hintText: "Ingin cari kue kering apa hari ini?",
-                  hintStyle: TextStyle(color: Colors.grey[600]),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  prefixIcon: _isSearching
-                      ? Padding(
-                          padding: const EdgeInsets.all(12.0), // Disesuaikan paddingnya
-                          child: SizedBox(
-                            width: 16, // Ukuran disesuaikan agar pas
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.grey),
-                            ),
-                          ),
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.all(12.0), // Disesuaikan paddingnya
-                          child: Icon(Icons.search, color: Colors.grey[600]),
-                        ),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, color: Colors.grey[600]),
-                          onPressed: () {
-                            _searchController.clear();
-                            widget.onSearchResults?.call([]);
-                            setState(() {}); // Update UI untuk menghilangkan clear button
-                          },
-                        )
-                      : null,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 20, // Disesuaikan paddingnya
-                    vertical: 12,   // Disesuaikan paddingnya
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() {}); // Update UI for clear button visibility
-                  if (value.isEmpty) {
-                    widget.onSearchResults?.call([]);
-                  }
-                  // Pertimbangkan untuk menambahkan debounce jika pencarian dilakukan secara live
-                },
-              ),
-            ),
           ),
 
           // User Icon with PopupMenuButton
@@ -209,7 +162,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                     enabled: false, // Tidak bisa diklik
                     child: Text(
                       currentUser.email ?? 'Pengguna Terautentikasi',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                 );
@@ -233,7 +189,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                     enabled: false, // Tidak bisa diklik
                     child: Text(
                       'Guest',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                 );
@@ -267,10 +226,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
             },
             child: CircleAvatar(
               backgroundColor: Colors.white.withOpacity(0.2),
-              child: Icon(
-                Icons.person,
-                color: Colors.white,
-              ),
+              child: Icon(Icons.person, color: Colors.white),
             ),
           ),
         ],

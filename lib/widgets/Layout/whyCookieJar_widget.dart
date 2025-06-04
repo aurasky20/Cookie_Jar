@@ -24,19 +24,25 @@ class WhyCookieJarWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildFeatureCard(
-                image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=300",
-                title: "Lorem Ipsum",
-                description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+                image:
+                    "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=300",
+                title: "Rasa Paling Lezat",
+                description:
+                    "Di Cookie Jar, kami percaya bahwa setiap gigitan kue kering haruslah sebuah pengalaman istimewa. Oleh karena itu, kami hanya menggunakan bahan-bahan berkualitas premium, resep warisan yang telah teruji, dan sentuhan cinta dalam setiap adonan",
               ),
               _buildFeatureCard(
-                image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=300",
-                title: "Lorem Ipsum",
-                description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+                image:
+                    "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=300",
+                title: "Pengiriman Cepat",
+                description:
+                    "Dengan aplikasi Cookie Jar, memesan kue kering favorit kini semudah sentuhan jari. Nikmati kemudahan menjelajahi beragam pilihan, melakukan pemesanan cepat, dan memilih opsi pengiriman yang fleksibel sesuai kebutuhan Anda.",
               ),
               _buildFeatureCard(
-                image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=300",
-                title: "Lorem Ipsum",
-                description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+                image:
+                    "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=300",
+                title: "Komunitas Pecinta Kue",
+                description:
+                    "Lebih dari sekadar toko kue online, Cookie Jar adalah komunitas para pecinta kue kering. Kami berkomitmen untuk memberikan pelayanan terbaik, mulai dari proses pemesanan yang mulus hingga layanan pelanggan yang responsif dan ramah.",
               ),
             ],
           ),
