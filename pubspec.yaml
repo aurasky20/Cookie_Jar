@@ -9,28 +9,27 @@ environment:
   sdk: ^3.7.2
 
 dependencies:
+  cached_network_image: ^3.4.1
+  cupertino_icons: ^1.0.8
+  file_picker: ^10.1.9
   flutter:
     sdk: flutter
-  google_fonts: ^6.1.0
-  cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.9
-  shared_preferences: ^2.5.3
-  supabase_flutter: ^2.9.0
+  get: ^4.7.2
+  google_fonts: ^6.1.0
+  http: ^1.4.0
+  image_picker: ^1.1.2
   intl: ^0.20.2
   provider: ^6.1.5
-  cached_network_image: ^3.4.1
+  shared_preferences: ^2.5.3
   shimmer: ^3.0.0
-  amplify_storage_s3: ^2.6.2
-  amplify_flutter: ^2.6.2
-  amplify_auth_cognito: ^2.6.2
-  image_picker: ^1.1.2
-  get: ^4.7.2
+  supabase_flutter: ^2.9.0
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
 
   flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
 
 flutter:
   uses-material-design: true

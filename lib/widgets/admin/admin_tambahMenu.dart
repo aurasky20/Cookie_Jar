@@ -1,12 +1,13 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:math';
+import 'dart:typed_data'; // Untuk Uint8List
+import 'package:flutter/foundation.dart' show kIsWeb; // Untuk kIsWeb
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-// Jika fungsi S3 Anda memerlukan mime type:
-// import 'package:mime/mime.dart';
+
+import 'package:http/http.dart' as http;
 
 class AdminTambahMenuWidget extends StatefulWidget {
   final double height;
@@ -34,18 +35,11 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
   final _komposisiController = TextEditingController();
   final _deskripsiController = TextEditingController();
 
-  // Untuk pratinjau lokal
-  File? _selectedImageFile;
-  Uint8List? _selectedImageBytes;
-  String? _selectedImageName;
-
-  // Untuk URL gambar setelah diunggah ke S3
-  String? s3ImageUrl;
-
-  bool _isLoading = false; // Untuk loading state keseluruhan form
-  bool _isUploadingImage = false; // Untuk loading state spesifik unggah gambar S3
+  Uri? imageUrl; // Untuk menyimpan URL gambar yang diunggah
 
   final _picker = ImagePicker();
+
+  String displayImageUrl = '';
 
   @override
   void dispose() {
@@ -57,120 +51,175 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      _selectedImageName = pickedFile.name;
+  // upload() async {
+  //   try {
+  //     imageUrl = await Utils.pickAndUploadImage();
+  //     if (imageUrl != null) {
+  //       _showSnackBar('Gambar berhasil diunggah: $imageUrl');
+  //     } else {
+  //       _showSnackBar('Gagal mengunggah gambar', isError: true);
+  //     }
+  //     setState(() {});
+  //   } catch (e) {
+  //     _showSnackBar('Error: $e', isError: true);
+  //   }
+  // }
+
+  // Future<String?> _uploadImage() async {
+  //   if (_selectedImageFile == null && _selectedImageBytes == null) return null;
+  //   if (_selectedImageName == null) return null;
+
+  //   try {
+  //     // Mendapatkan ekstensi dari nama file
+  //     final fileExtension = _selectedImageName!.split('.').last;
+  //     final fileName =
+  //         'product_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+
+  //     final Uint8List imageBytes;
+  //     if (kIsWeb) {
+  //       imageBytes = _selectedImageBytes!;
+  //     } else {
+  //       imageBytes = await _selectedImageFile!.readAsBytes();
+  //     }
+
+  //     await supabase.storage
+  //         .from('products')
+  //         .uploadBinary(
+  //           fileName,
+  //           imageBytes, // Gunakan imageBytes untuk upload
+  //           fileOptions: FileOptions(
+  //             contentType: 'image/$fileExtension',
+  //             upsert: false,
+  //           ),
+  //         );
+
+  //     return supabase.storage.from('products').getPublicUrl(fileName);
+  //   } catch (e) {
+  //     throw Exception('Error mengunggah gambar: $e');
+  //   }
+  // }
+
+  XFile? _pickedXFile; // XFile dari image_picker
+  String? _uploadedUrl;
+  bool _isUploading = false;
+
+  Future<void> uploadToS3() async {
+    if (_pickedXFile == null) return;
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    // Buat nama file unik
+    final fileName = 'flutter_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final bucketUrl =
+        'https://webcookiejar5a099-dev.s3.ap-southeast-2.amazonaws.com/product/$fileName';
+
+    try {
+      // Baca bytes dengan cara yang sesuai
+      late final Uint8List bytes;
       if (kIsWeb) {
-        _selectedImageBytes = await pickedFile.readAsBytes();
-        _selectedImageFile = null; // Pastikan file null untuk web
+        // Di web, XFile punya method readAsBytes()
+        bytes = await _pickedXFile!.readAsBytes();
       } else {
-        _selectedImageFile = File(pickedFile.path);
-        _selectedImageBytes = null; // Pastikan bytes null untuk non-web
+        // Di mobile/desktop, kita bisa konversi XFile ke File dart:io
+        final file = File(_pickedXFile!.path);
+        bytes = await file.readAsBytes();
       }
-      // Reset s3ImageUrl karena gambar baru telah dipilih untuk pratinjau.
-      // Ini akan diisi lagi SETELAH gambar baru ini diunggah ke S3.
-      s3ImageUrl = null;
-      setState(() {}); // Perbarui UI untuk menampilkan pratinjau
-    } else {
-      _showSnackBar('Tidak ada gambar yang dipilih.', isError: true);
+
+      final response = await http.put(
+        Uri.parse(bucketUrl),
+        headers: {'Content-Type': 'image/jpeg'},
+        body: bytes,
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _uploadedUrl = bucketUrl;
+          _isUploading = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('✅ Upload berhasil!')));
+      } else {
+        setState(() {
+          _isUploading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Upload gagal: HTTP ${response.statusCode}'),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isUploading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('❌ Error saat upload: $e')));
     }
   }
 
-  // --- GANTIKAN DENGAN FUNGSI UNGGAH S3 ANDA ---
-  // Contoh kerangka, Anda harus mengimplementasikannya
-  Future<String?> _yourActualS3UploadFunction(dynamic imageData, String fileName) async {
-    // imageData bisa berupa File atau Uint8List
-    // fileName adalah nama file yang diinginkan di S3
-    _showSnackBar("Mulai mengunggah ke S3...", isError: false);
-    await Future.delayed(const Duration(seconds: 3)); // Simulasi proses unggah
-
-    // Logika unggah S3 Anda di sini
-    // if (unggah berhasil) {
-    //   return "URL_GAMBAR_DARI_S3/$fileName";
-    // } else {
-    //   return null;
-    // }
-    // Contoh kembalian sukses:
-    return "https://s3.your-region.amazonaws.com/your-bucket-name/uploads/$fileName";
-    // Contoh kembalian gagal:
-    // return null;
+  Future<void> pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _pickedXFile = picked;
+        _uploadedUrl = null;
+      });
+    }
   }
-  // --- AKHIR FUNGSI UNGGAH S3 ---
 
+  int generate5DigitRandom() {
+    final _random = Random();
+    return 10000 + _random.nextInt(90000);
+  }
 
-  Future<void> _saveMenu() async { // Menggantikan _uploadToS3AndSaveForm atau nama serupa
+  Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
-
-    // Cek apakah ada gambar yang perlu diproses (baik lokal atau sudah ada URL S3)
-    if (_selectedImageFile == null && _selectedImageBytes == null && s3ImageUrl == null) {
-      _showSnackBar('Silakan pilih gambar produk terlebih dahulu.', isError: true);
+    if (_pickedXFile == null) {
+      // Cek keduanya
+      _showSnackBar('Silakan pilih gambar produk.', isError: true);
       return;
     }
 
+    if (!mounted) return;
     setState(() {
-      _isLoading = true; // Loading untuk keseluruhan proses
+      _isUploading = true;
     });
 
-    String? finalImageUrlForSupabase = s3ImageUrl; // Gunakan URL S3 yang sudah ada jika gambar tidak diubah
-
     try {
-      // Jika ada gambar lokal yang baru dipilih (artinya s3ImageUrl di-reset menjadi null oleh _pickImage)
-      if ((_selectedImageFile != null || _selectedImageBytes != null) && finalImageUrlForSupabase == null) {
-        setState(() {
-          _isUploadingImage = true;
-        });
-
-        dynamic imageData = kIsWeb ? _selectedImageBytes : _selectedImageFile;
-        String fileName = _selectedImageName ?? DateTime.now().millisecondsSinceEpoch.toString() + (kIsWeb ? '.jpg' : _selectedImageFile!.path.split('.').last);
-        
-        finalImageUrlForSupabase = await _yourActualS3UploadFunction(imageData!, fileName);
-
-        setState(() {
-          _isUploadingImage = false;
-        });
-
-        if (finalImageUrlForSupabase == null) {
-          _showSnackBar('Gagal mengunggah gambar ke S3. Silakan coba lagi.', isError: true);
-          setState(() { _isLoading = false; });
-          return;
-        }
-        // Update s3ImageUrl di state agar jika terjadi error setelah ini dan UI dibangun ulang, Image.network bisa digunakan
-        setState(() {
-          s3ImageUrl = finalImageUrlForSupabase;
-        });
-        _showSnackBar('Gambar berhasil diunggah ke S3.');
+      if (_pickedXFile != null) {
+        // Jika ada gambar yang dipilih, upload ke S3
+        await uploadToS3();
+      }
+      if (_uploadedUrl == null) {
+        throw Exception('Gagal mengunggah gambar');
       }
 
-      if (finalImageUrlForSupabase == null) {
-        _showSnackBar('URL gambar tidak tersedia untuk disimpan.', isError: true);
-        setState(() { _isLoading = false; });
-        return;
-      }
-      
-      // Lanjutkan menyimpan data produk ke tabel Supabase
       await supabase.from('produk').insert({
         'nama_produk': _namaController.text.trim(),
         'harga': int.parse(_hargaController.text.trim()),
         'stok': int.parse(_stokController.text.trim()),
         'komposisi': _komposisiController.text.trim(),
         'deskripsi': _deskripsiController.text.trim(),
-        'link_foto': finalImageUrlForSupabase, // Gunakan URL gambar dari S3
+        'link_foto': _uploadedUrl,
         'terjual': 0,
+        'id' : generate5DigitRandom(),
       });
 
+      print('✅ Produk berhasil ditambahkan: ${_namaController.text.trim()}');
       if (!mounted) return;
-      _showSnackBar('Menu berhasil ditambahkan!');
       widget.onSuccess();
-
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar('Error saat menyimpan: ${e.toString()}', isError: true);
+      _showSnackBar('Error: $e', isError: true);
     } finally {
       if (!mounted) return;
       setState(() {
-        _isLoading = false;
-        _isUploadingImage = false;
+        _isUploading = false;
       });
     }
   }
@@ -180,82 +229,9 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Theme.of(context).colorScheme.error : Colors.green,
+        backgroundColor: isError ? Colors.red : Colors.green,
       ),
     );
-  }
-
-  Widget _buildImagePreview() {
-    // Prioritas 1: Pratinjau lokal dari gambar yang baru dipilih (web)
-    if (_selectedImageBytes != null && kIsWeb) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.memory(
-          _selectedImageBytes!,
-          fit: BoxFit.cover,
-          width: 500,
-          height: 500,
-        ),
-      );
-    }
-    // Prioritas 2: Pratinjau lokal dari gambar yang baru dipilih (mobile/desktop)
-    else if (_selectedImageFile != null && !kIsWeb) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.file(
-          _selectedImageFile!,
-          fit: BoxFit.cover,
-          width: 500,
-          height: 500,
-        ),
-      );
-    }
-    // Prioritas 3: Gambar dari S3 jika sudah diunggah dan tidak ada pratinjau lokal aktif
-    else if (s3ImageUrl != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          s3ImageUrl!,
-          fit: BoxFit.cover,
-          width: 500,
-          height: 500,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container( /* ... widget loading Anda ... */ );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Container( /* ... widget error Anda ... */ );
-          },
-        ),
-      );
-    }
-    // Prioritas 4: Placeholder jika tidak ada gambar sama sekali ATAU sedang proses unggah awal
-    else {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (_isUploadingImage) ...[ // Tampilkan loading HANYA jika sedang upload DAN belum ada pratinjau/S3 URL
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            const Text('Mengunggah gambar...'),
-          ] else ...[
-            Icon(
-              Icons.add_a_photo_outlined,
-              size: 40,
-              color: Colors.grey[500],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Pilih Gambar',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ],
-      );
-    }
   }
 
   @override
@@ -293,10 +269,13 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                   children: [
                     Center(
                       child: GestureDetector(
-                        onTap: (_isLoading || _isUploadingImage) ? null : _pickImage,
+                        onTap: () {
+                          pickImage();
+                        },
                         child: Container(
-                          width: 500,
-                          height: 500,
+                          padding: EdgeInsets.symmetric(horizontal: 15),
+                          width: 550,
+                          height: 300,
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(12),
@@ -305,7 +284,31 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                               style: BorderStyle.solid,
                             ),
                           ),
-                          child: _buildImagePreview(),
+                          child:
+                              (_pickedXFile == null)
+                                  ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_a_photo_outlined,
+                                        size: 40,
+                                        color: Colors.grey[500],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Pilih Gambar',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                  : Image.network(
+                                    _pickedXFile!.path,
+                                    fit: BoxFit.cover,
+                                    height: 500,
+                                  ),
                         ),
                       ),
                     ),
@@ -323,9 +326,13 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                             controller: _stokController,
                             label: 'Stok',
                             keyboardType: TextInputType.number,
-                            validator: (v) => v!.isEmpty
-                                ? 'Wajib'
-                                : (int.tryParse(v) == null ? 'Angka' : null),
+                            validator:
+                                (v) =>
+                                    v!.isEmpty
+                                        ? 'Wajib'
+                                        : (int.tryParse(v) == null
+                                            ? 'Angka'
+                                            : null),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -334,9 +341,13 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                             controller: _hargaController,
                             label: 'Harga',
                             keyboardType: TextInputType.number,
-                            validator: (v) => v!.isEmpty
-                                ? 'Wajib'
-                                : (int.tryParse(v) == null ? 'Angka' : null),
+                            validator:
+                                (v) =>
+                                    v!.isEmpty
+                                        ? 'Wajib'
+                                        : (int.tryParse(v) == null
+                                            ? 'Angka'
+                                            : null),
                           ),
                         ),
                       ],
@@ -359,9 +370,13 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: (_isLoading || _isUploadingImage)
-                            ? null
-                            : _saveMenu, // Panggil _saveMenu
+                        onPressed: () {
+                          if (_pickedXFile == null) {
+                            _showSnackBar('Silahkan pilih gambar!');
+                            return;
+                          }
+                          _submitForm.call();
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xffFF8E37),
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -369,22 +384,23 @@ class _AdminTambahMenuWidgetState extends State<AdminTambahMenuWidget> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: _isLoading // Cukup _isLoading karena itu mencakup _isUploadingImage
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
+                        child:
+                            _isUploading
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : Text(
+                                  'Simpan Menu',
+                                  style: GoogleFonts.dmSans(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              )
-                            : Text(
-                                'Simpan Menu',
-                                style: GoogleFonts.dmSans(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                       ),
                     ),
                     const SizedBox(height: 10),
